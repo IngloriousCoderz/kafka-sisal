@@ -17,7 +17,7 @@ public class JsonExample {
 
     try {
       String jsonString = objectMapper.writeValueAsString(user);
-      System.out.println("JSON Serialization: " + jsonString);
+      System.out.println("JSON Serialization (string): " + jsonString + ", length: " + jsonString.getBytes().length);
 
       User deserializedUser = objectMapper.readValue(jsonString, User.class);
       System.out.println("Name deserialization: " + deserializedUser.name);

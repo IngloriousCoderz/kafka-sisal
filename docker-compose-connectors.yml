@@ -1,0 +1,120 @@
+networks:
+  kafka-net:
+    driver: bridge
+
+volumes:
+  kafka-data:
+
+services:
+  broker:
+    image: apache/kafka:latest
+    container_name: broker
+    ports:
+      - 9092:9092
+    networks:
+      - kafka-net
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_INTERNAL://broker:9091,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://broker:9091
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@broker:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 3
+
+      # Production-ready configs
+      # The cluster id can be generated automatically, but it's better to do it manually.
+      CLUSTER_ID: "5L6g3nShT-eMCtK--X86sw"
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+    volumes:
+      - ./data:/var/lib/kafka/data
+      - ./prometheus:/opt/prometheus
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - 8081:8080
+    networks:
+      - kafka-net
+    environment:
+      KAFKA_CLUSTERS_0_NAME: my-kafka-cluster
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: broker:9091
+    depends_on:
+      - broker
+
+  akhq:
+    image: tchiotludo/akhq:latest
+    container_name: akhq
+    ports:
+      - 8082:8080
+    networks:
+      - kafka-net
+    environment:
+      AKHQ_CONFIGURATION: |
+        akhq:
+          connections:
+            docker-kafka:
+              properties:
+                bootstrap.servers: broker:9091
+    depends_on:
+      - broker
+
+  connect:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - broker
+    ports:
+      - 8083:8083
+    environment:
+      BOOTSTRAP_SERVERS: broker:9091
+      REST_ADVERTISED_HOST_NAME: connect
+      REST_PORT: 8083
+      GROUP_ID: compose-connect-group
+      CONFIG_STORAGE_TOPIC: docker-connect-configs
+      OFFSET_STORAGE_TOPIC: docker-connect-offsets
+      STATUS_STORAGE_TOPIC: docker-connect-status
+      KEY_CONVERTER: "org.apache.kafka.connect.storage.StringConverter"
+      VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: All
+      CONNECT_PLUGIN_PATH: "/opt/kafka/plugins"
+    volumes:
+      - ./data:/data
+      - ./custom-plugins:/opt/kafka/custom-plugin
+
+  nifi:
+    image: apache/nifi:1.10.0
+    container_name: nifi
+    restart: unless-stopped
+    #network_mode: bridge
+    ports:
+      # HTTP
+      - 8080:8080/tcp
+      # HTTPS
+      - 8443:8443/tcp
+      # Remote Input Socket
+      - 10000:10000/tcp
+      # JVM Debugger
+      - 8000:8000/tcp
+      # Cluster Node Protocol
+      #- 11443:11443/tcp
+    networks:
+      - kafka-net
+    volumes:
+      # mkdir /var/lib/nifi && chown -R 1000:1000 /var/lib/nifi
+      - ./nifi/database_repository:/opt/nifi/nifi-current/database_repository
+      - ./nifi/flowfile_repository:/opt/nifi/nifi-current/flowfile_repository
+      - ./nifi/content_repository:/opt/nifi/nifi-current/content_repository
+      - ./nifi/provenance_repository:/opt/nifi/nifi-current/provenance_repository
+      - ./nifi/state:/opt/nifi/nifi-current/state
+      - ./nifi/logs:/opt/nifi/nifi-current/logs

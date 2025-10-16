@@ -3,12 +3,19 @@ import time
 import random
 
 # Configuration for your Kafka broker
-conf = {'bootstrap.servers': 'localhost:9092'}  # dictionary
+conf = {
+    'bootstrap.servers': 'localhost:9094',
+    'security.protocol': 'ssl',
+    'ssl.ca.location': '../secrets/myCA.pem',
+    # 'ssl.certificate.location': '/path/to/service.cert',  # optional
+    # 'ssl.key.location': '../secrets/myCA.key',           # optional
+    # 'ssl.key.password': 'password',
+}
 
 # Create a producer instance
 producer = Producer(conf)
 
-topic_name = "my-topic"
+topic_name = "hello-ssl"
 
 print("Starting to send messages...")
 

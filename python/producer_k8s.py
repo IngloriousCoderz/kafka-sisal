@@ -3,7 +3,7 @@ import time
 import random
 
 # Configuration for your Kafka broker
-conf = {'bootstrap.servers': 'localhost:9092'}  # dictionary
+conf = {'bootstrap.servers': 'localhost:9094'}  # dictionary
 
 # Create a producer instance
 producer = Producer(conf)

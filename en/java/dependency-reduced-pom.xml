@@ -18,7 +18,7 @@
             <configuration>
               <transformers>
                 <transformer>
-                  <mainClass>JsonExample</mainClass>
+                  <mainClass>AvroExample</mainClass>
                 </transformer>
               </transformers>
             </configuration>

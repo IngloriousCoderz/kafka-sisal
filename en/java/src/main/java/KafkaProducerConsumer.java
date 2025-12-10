@@ -63,6 +63,7 @@ public class KafkaProducerConsumer {
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
     props.put(ConsumerConfig.GROUP_ID_CONFIG, "java_consumer_group");
     props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest"); // Start reading from the beginning of the topic
+    props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
 
     try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props)) {
       System.out.println("Starting consumer...");
@@ -75,6 +76,9 @@ public class KafkaProducerConsumer {
         for (ConsumerRecord<String, String> record : records) {
           System.out.printf("Consumed message from topic '%s', partition %d, offset %d, key '%s', value '%s'%n",
               record.topic(), record.partition(), record.offset(), record.key(), record.value());
+
+          consumer.commitSync();
+          System.out.println("Offset committed manually.");
         }
       }
     }

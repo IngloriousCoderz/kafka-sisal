@@ -25,6 +25,12 @@
       <artifactId>kafka-clients</artifactId>
       <version>4.1.0</version>
     </dependency>
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.20.0</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -46,7 +52,8 @@
               <transformers>
                 <transformer
                   implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>KafkaProducerConsumer</mainClass>
+                  <!-- <mainClass>KafkaProducerConsumer</mainClass> -->
+                  <mainClass>JsonExample</mainClass>
                 </transformer>
               </transformers>
             </configuration>

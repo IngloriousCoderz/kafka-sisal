@@ -5,7 +5,7 @@ user = {
     "id": 123
 }
 
-json_string = json.dumps(user)
+json_string = json.dumps(user, separators=(",", ":"))
 print("JSON Serialized (string): " + json_string)
 print("Length in bytes: " + str(len(json_string.encode("utf-8"))))
 

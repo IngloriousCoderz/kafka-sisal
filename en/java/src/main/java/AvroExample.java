@@ -1,12 +1,17 @@
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.Decoder;
+import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 
 public class AvroExample {
@@ -35,6 +40,14 @@ public class AvroExample {
     byte[] avroBytes = outputStream.toByteArray();
     outputStream.close();
 
-    System.out.println("Avro Serialized(bytes): " + avroBytes.length + " bytes");
+    System.out.println("Avro serialized (bytes): " + avroBytes.length + " bytes");
+
+    DatumReader<GenericRecord> datumReader = new SpecificDatumReader<>(schema);
+    ByteArrayInputStream inputStream = new ByteArrayInputStream(avroBytes);
+    Decoder decoder = DecoderFactory.get().binaryDecoder(inputStream, null);
+    GenericRecord deserializedUser = datumReader.read(null, decoder);
+    inputStream.close();
+
+    System.out.println("Deserialized name: " + deserializedUser.get("name"));
   }
 }

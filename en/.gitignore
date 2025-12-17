@@ -1,3 +1,5 @@
 /java/target/
 /java/dependency-reduced-pom.xml
 /python/.venv/
+/data/
+/secrets/
